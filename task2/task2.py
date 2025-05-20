@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # 1. Prepare the image --------------------------------------------
-image_pil = Image.open('/Users/cristiad/Documents/Master Degree/1st Semester/Image Analysis/iaor/task2/ampelmaennchen.png').convert("L")
+image_pil = Image.open('ampelmaennchen.png').convert("L")
 image_array = np.array(image_pil, dtype=np.float32) / 255.0
 
 # -------------------- GRAYSCALE & ENHANCEMENT --------------------
@@ -17,38 +17,31 @@ max_intensity = grayscale_array.max()
 enhanced_grayscale_array = ((grayscale_array - min_intensity) / (max_intensity - min_intensity)) * 255
 enhanced_grayscale_array_rounded = np.floor(enhanced_grayscale_array).astype(np.uint8)
 
-# Normalization
 image = enhanced_grayscale_array_rounded.astype(np.float32) / 255.0
 
-# Step a: Define Kernel Gaussian
-def create_gaussian_kernel(size, sigma):
-    center = size // 2
-    kernel = np.zeros(size)
-    for i in range(size):
-        x = i - center
-        kernel[i] = (1.0 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-(x**2) / (2 * sigma**2))
+def create_gaussian_derivative_kernel(xSize, ySize, sigma):
+    xCenter = xSize // 2
+    yCenter = ySize // 2
+    kernel = np.zeros((xSize, ySize))
+    for i in range(xSize):
+        x = i - xCenter
+        for j in range(ySize):
+            y = j - yCenter
+            kernel[i,j] = (-x/ ((2 * np.pi) * sigma**4)) * np.exp(-(((x**2) + (y**2)) / (2 * sigma**2)))
     return kernel
 
-def create_gaussian_derivative_kernel(size, sigma):
-    center = size // 2
-    kernel = np.zeros(size)
-    for i in range(size):
-        x = i - center
-        kernel[i] = -x * (1.0 / (np.sqrt(2 * np.pi) * sigma**3)) * np.exp(-(x**2) / (2 * sigma**2))
-    return kernel
+# Kernel Parameters
+SizeX = 5
+SizeY = 5
+Sigma = 0.5
 
-# Kernel parameter
-size = 11
-sigma = 1.5
+Gx_deriv = create_gaussian_derivative_kernel(SizeX, SizeY, Sigma)
+print(Gx_deriv)
+Gy_deriv = Gx_deriv.T
+print(Gy_deriv)
 
-# Make 2D Kernel fro Outer Products
-G = create_gaussian_kernel(size, sigma)
-G_deriv = create_gaussian_derivative_kernel(size, sigma)
-GoGx = np.outer(G_deriv, G)
-GoGy = np.outer(G, G_deriv)
-
-# Step b: Manual Convolution
-def manual_convolve2d(image, kernel):
+# Manual Convolution
+def manual_convolution(image, kernel):
     i_h, i_w = image.shape
     k_h, k_w = kernel.shape
     pad_h = k_h // 2
@@ -58,57 +51,72 @@ def manual_convolve2d(image, kernel):
     for i in range(i_h):
         for j in range(i_w):
             region = padded_image[i:i + k_h, j:j + k_w]
-            output[i, j] = np.sum(region * kernel)
+            output[i, j] = np.sum( kernel * region)
     return output
 
-# GoG Filter application
-Ix = manual_convolve2d(image, GoGx)
-Iy = manual_convolve2d(image, GoGy)
+# GoG Filter Application
+Ix = manual_convolution(image, Gx_deriv)
+Iy = manual_convolution(image, Gy_deriv)
 
-# Step c: Calculate Gradien Magnitude
+# Calculate Gradient Magnitude
 grad_magnitude = np.sqrt(Ix**2 + Iy**2)
 
-# -------------------- 5. SAVE RESULTS --------------------
+# SAVE RESULTS
 plt.imsave("1_original_image.png", image_array, cmap='gray')
 plt.imsave("2_enhanced_grayscale.png", enhanced_grayscale_array_rounded, cmap='gray')
 plt.imsave("3_gradient_Ix.png", Ix, cmap='gray')
 plt.imsave("4_gradient_Iy.png", Iy, cmap='gray')
 plt.imsave("5_gradient_magnitude.png", grad_magnitude, cmap='gray')
 
-# Optional: save all visualizations in one figure
-plt.figure(figsize=(18, 4))
-plt.subplot(1, 5, 1)
-plt.imshow(image_array, cmap='gray')
-plt.title('Original Image')
-plt.axis('off')
+# Auto-Correlation Matrix
+MIx = Ix * Ix
+MIy = Iy * Iy
+MIxy = Ix * Iy
 
-plt.subplot(1, 5, 2)
-plt.imshow(enhanced_grayscale_array_rounded, cmap='gray')
-plt.title('Enhanced Grayscale')
-plt.axis('off')
+def create_uniform_kernel(size):
+    return np.ones((size, size)) / (size * size)
 
-plt.subplot(1, 5, 3)
-plt.imshow(Ix, cmap='gray')
-plt.title('Gradient Ix')
-plt.axis('off')
+kernel_5x5 = create_uniform_kernel(5)
 
-plt.subplot(1, 5, 4)
-plt.imshow(Iy, cmap='gray')
-plt.title('Gradient Iy')
-plt.axis('off')
+# Do convolution using kernel 5 x 5
+S_Ix2 = manual_convolution(MIx, kernel_5x5)
+S_Iy2 = manual_convolution(MIy, kernel_5x5)
+S_Ixy = manual_convolution(MIxy, kernel_5x5)
 
-plt.subplot(1, 5, 5)
-plt.imshow(grad_magnitude, cmap='gray')
-plt.title('Gradient Magnitude')
-plt.axis('off')
+# Calculate Determinant and Trace from Matrix M
+det_M = S_Ix2 * S_Iy2 - S_Ixy**2
+trace_M = S_Ix2 + S_Iy2
+eps = 1e-12
 
-plt.tight_layout()
-plt.savefig("all_results_combined.png", dpi=300)
+# Step 3: Calculate Förstner
+k = 0.04
+W_forstner = det_M / (trace_M + eps)
+Q_forstner = (4 * det_M) / (trace_M**2 + eps)
 
-print("All image printed out:")
-print("- 1_original_image.png")
-print("- 2_enhanced_grayscale.png")
-print("- 3_gradient_Ix.png")
-print("- 4_gradient_Iy.png")
-print("- 5_gradient_magnitude.png")
-print("- all_results_combined.png")
+# Step 4: Thresholding Corner detection (raw)
+threshold_forstner = 0.004
+corner_mask_forstner = (W_forstner > threshold_forstner) & (Q_forstner > 0.5)
+
+# SAVE RESULTS
+plt.imsave("6_S_Ix.png", S_Ix2, cmap='gray')
+plt.imsave("7_S_Iy2.png", S_Iy2, cmap='gray')
+plt.imsave("8_S_IxIy.png", S_Ixy, cmap='gray')
+plt.imsave("9_W_forstner.png", W_forstner, cmap='jet')
+plt.imsave("10_Q_forstner.png", Q_forstner, cmap='jet')
+
+def corner_mask(W, Q, tw=0.005, tq=0.6):
+    return (W > tw) & (Q > tq)
+
+# Mask based on Forstner
+Mc = corner_mask(W_forstner, Q_forstner, tw=0.004, tq=0.5)
+
+# Load original image again
+img_rgb_load = Image.open('ampelmaennchen.png').convert("RGB")
+img_rgb_array = np.array(img_rgb_load, dtype=np.float32) / 255.0
+
+# Create copy for final overlay
+overlay_result = np.copy(img_rgb_array)
+overlay_result[Mc] = [1.0, 0.0, 0.0]
+
+plt.imsave("11_Corner_Mask_Mc.png", Mc.astype(np.uint8) * 255, cmap='gray')
+plt.imsave("12_overlay_result.png", overlay_result)
