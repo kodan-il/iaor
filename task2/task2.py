@@ -2,11 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-# 1. Prepare the image --------------------------------------------
 image_pil = Image.open('ampelmaennchen.png').convert("L")
 image_array = np.array(image_pil, dtype=np.float32) / 255.0
 
-# -------------------- GRAYSCALE & ENHANCEMENT --------------------
 # Convert to Grayscale manually
 grayscale_array = (image_array * 255).astype(np.uint8)
 
