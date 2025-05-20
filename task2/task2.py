@@ -2,9 +2,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-# 1. Prepare the image ------------------------------------------------------------------------------------------------------------------------------------------
-image_pil = Image.open('/Users/cristiad/Documents/Master Degree/1st Semester/Image Analysis/iaor/task2/ampelmaennchen.png').convert("L") 
-image = np.array(image_pil, dtype=np.float32) / 255.0
+# 1. Prepare the image --------------------------------------------
+image_pil = Image.open('/Users/cristiad/Documents/Master Degree/1st Semester/Image Analysis/iaor/task2/ampelmaennchen.png').convert("L")
+image_array = np.array(image_pil, dtype=np.float32) / 255.0
+
+# -------------------- GRAYSCALE & ENHANCEMENT --------------------
+# Convert to Grayscale manually
+grayscale_array = (image_array * 255).astype(np.uint8)
+
+
+# Contrast stretching (enhancement)
+min_intensity = grayscale_array.min()
+max_intensity = grayscale_array.max()
+enhanced_grayscale_array = ((grayscale_array - min_intensity) / (max_intensity - min_intensity)) * 255
+enhanced_grayscale_array_rounded = np.floor(enhanced_grayscale_array).astype(np.uint8)
+
+# Normalization
+image = enhanced_grayscale_array_rounded.astype(np.float32) / 255.0
 
 # Step a: Define Kernel Gaussian
 def create_gaussian_kernel(size, sigma):
@@ -54,22 +68,47 @@ Iy = manual_convolve2d(image, GoGy)
 # Step c: Calculate Gradien Magnitude
 grad_magnitude = np.sqrt(Ix**2 + Iy**2)
 
-# Show results
-plt.figure(figsize=(12, 4))
-plt.subplot(1, 3, 1)
+# -------------------- 5. SAVE RESULTS --------------------
+plt.imsave("1_original_image.png", image_array, cmap='gray')
+plt.imsave("2_enhanced_grayscale.png", enhanced_grayscale_array_rounded, cmap='gray')
+plt.imsave("3_gradient_Ix.png", Ix, cmap='gray')
+plt.imsave("4_gradient_Iy.png", Iy, cmap='gray')
+plt.imsave("5_gradient_magnitude.png", grad_magnitude, cmap='gray')
+
+# Optional: save all visualizations in one figure
+plt.figure(figsize=(18, 4))
+plt.subplot(1, 5, 1)
+plt.imshow(image_array, cmap='gray')
+plt.title('Original Image')
+plt.axis('off')
+
+plt.subplot(1, 5, 2)
+plt.imshow(enhanced_grayscale_array_rounded, cmap='gray')
+plt.title('Enhanced Grayscale')
+plt.axis('off')
+
+plt.subplot(1, 5, 3)
 plt.imshow(Ix, cmap='gray')
-plt.title('Gradient Ix (GoGx)')
+plt.title('Gradient Ix')
 plt.axis('off')
 
-plt.subplot(1, 3, 2)
+plt.subplot(1, 5, 4)
 plt.imshow(Iy, cmap='gray')
-plt.title('Gradient Iy (GoGy)')
+plt.title('Gradient Iy')
 plt.axis('off')
 
-plt.subplot(1, 3, 3)
+plt.subplot(1, 5, 5)
 plt.imshow(grad_magnitude, cmap='gray')
 plt.title('Gradient Magnitude')
 plt.axis('off')
 
 plt.tight_layout()
-plt.show()
+plt.savefig("all_results_combined.png", dpi=300)
+
+print("All image printed out:")
+print("- 1_original_image.png")
+print("- 2_enhanced_grayscale.png")
+print("- 3_gradient_Ix.png")
+print("- 4_gradient_Iy.png")
+print("- 5_gradient_magnitude.png")
+print("- all_results_combined.png")
