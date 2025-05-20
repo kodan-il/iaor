@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # 1. Prepare the image ------------------------------------------------------------------------------------------------------------------------------------------
-image_pil = Image.open('/Users/cristiad/Documents/Master Degree/1st Semester/Image Analysis/iaor/task2/ampelmaennchen.png').convert("L")  # Ganti dengan nama file Anda
+image_pil = Image.open('/Users/cristiad/Documents/Master Degree/1st Semester/Image Analysis/iaor/task2/ampelmaennchen.png').convert("L") 
 image = np.array(image_pil, dtype=np.float32) / 255.0
 
-# Step a: Definisikan kernel Gaussian dan turunannya
+# Step a: Define Kernel Gaussian
 def create_gaussian_kernel(size, sigma):
     center = size // 2
     kernel = np.zeros(size)
@@ -23,17 +23,17 @@ def create_gaussian_derivative_kernel(size, sigma):
         kernel[i] = -x * (1.0 / (np.sqrt(2 * np.pi) * sigma**3)) * np.exp(-(x**2) / (2 * sigma**2))
     return kernel
 
-# Parameter kernel
+# Kernel parameter
 size = 11
 sigma = 1.5
 
-# Buat kernel 2D dari outer product
+# Make 2D Kernel fro Outer Products
 G = create_gaussian_kernel(size, sigma)
 G_deriv = create_gaussian_derivative_kernel(size, sigma)
 GoGx = np.outer(G_deriv, G)
 GoGy = np.outer(G, G_deriv)
 
-# Step b: Konvolusi manual
+# Step b: Manual Convolution
 def manual_convolve2d(image, kernel):
     i_h, i_w = image.shape
     k_h, k_w = kernel.shape
@@ -47,14 +47,14 @@ def manual_convolve2d(image, kernel):
             output[i, j] = np.sum(region * kernel)
     return output
 
-# Terapkan GoG filter
+# GoG Filter application
 Ix = manual_convolve2d(image, GoGx)
 Iy = manual_convolve2d(image, GoGy)
 
-# Step c: Hitung magnitudo gradien
+# Step c: Calculate Gradien Magnitude
 grad_magnitude = np.sqrt(Ix**2 + Iy**2)
 
-# Visualisasi hasil
+# Show results
 plt.figure(figsize=(12, 4))
 plt.subplot(1, 3, 1)
 plt.imshow(Ix, cmap='gray')
