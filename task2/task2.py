@@ -62,11 +62,11 @@ Iy = manual_convolution(image, Gy_deriv)
 grad_magnitude = np.sqrt(Ix**2 + Iy**2)
 
 # SAVE RESULTS
-plt.imsave("1_original_image.png", image_array, cmap='gray')
-plt.imsave("2_enhanced_grayscale.png", enhanced_grayscale_array_rounded, cmap='gray')
-plt.imsave("3_gradient_Ix.png", Ix, cmap='gray')
-plt.imsave("4_gradient_Iy.png", Iy, cmap='gray')
-plt.imsave("5_gradient_magnitude.png", grad_magnitude, cmap='gray')
+plt.imsave("01_original_image.png", image_array, cmap='gray')
+plt.imsave("02_enhanced_grayscale.png", enhanced_grayscale_array_rounded, cmap='gray')
+plt.imsave("03_gradient_Ix.png", Ix, cmap='gray')
+plt.imsave("04_gradient_Iy.png", Iy, cmap='gray')
+plt.imsave("05_gradient_magnitude.png", grad_magnitude, cmap='gray')
 
 # Auto-Correlation Matrix
 MIx = Ix * Ix
@@ -98,10 +98,10 @@ threshold_forstner = 0.004
 corner_mask_forstner = (W_forstner > threshold_forstner) & (Q_forstner > 0.5)
 
 # SAVE RESULTS
-plt.imsave("6_S_Ix.png", S_Ix2, cmap='gray')
-plt.imsave("7_S_Iy2.png", S_Iy2, cmap='gray')
-plt.imsave("8_S_IxIy.png", S_Ixy, cmap='gray')
-plt.imsave("9_W_forstner.png", W_forstner, cmap='jet')
+plt.imsave("06_S_Ix.png", S_Ix2, cmap='gray')
+plt.imsave("07_S_Iy2.png", S_Iy2, cmap='gray')
+plt.imsave("08_S_IxIy.png", S_Ixy, cmap='gray')
+plt.imsave("09_W_forstner.png", W_forstner, cmap='jet')
 plt.imsave("10_Q_forstner.png", Q_forstner, cmap='jet')
 
 def corner_mask(W, Q, tw=0.005, tq=0.6):
