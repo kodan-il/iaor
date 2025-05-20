@@ -98,11 +98,8 @@ threshold_forstner = 0.004
 corner_mask_forstner = (W_forstner > threshold_forstner) & (Q_forstner > 0.5)
 
 # SAVE RESULTS
-plt.imsave("06_S_Ix.png", S_Ix2, cmap='gray')
-plt.imsave("07_S_Iy2.png", S_Iy2, cmap='gray')
-plt.imsave("08_S_IxIy.png", S_Ixy, cmap='gray')
-plt.imsave("09_W_forstner.png", W_forstner, cmap='jet')
-plt.imsave("10_Q_forstner.png", Q_forstner, cmap='jet')
+plt.imsave("06_W_forstner.png", W_forstner, cmap='jet')
+plt.imsave("07_Q_forstner.png", Q_forstner, cmap='jet')
 
 def corner_mask(W, Q, tw=0.005, tq=0.6):
     return (W > tw) & (Q > tq)
@@ -118,5 +115,5 @@ img_rgb_array = np.array(img_rgb_load, dtype=np.float32) / 255.0
 overlay_result = np.copy(img_rgb_array)
 overlay_result[Mc] = [1.0, 0.0, 0.0]
 
-plt.imsave("11_Corner_Mask_Mc.png", Mc.astype(np.uint8) * 255, cmap='gray')
-plt.imsave("12_overlay_result.png", overlay_result)
+plt.imsave("08_Corner_Mask_Mc.png", Mc.astype(np.uint8) * 255, cmap='gray')
+plt.imsave("09_overlay_result.png", overlay_result)
